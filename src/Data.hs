@@ -33,7 +33,10 @@ dd !? h =
         idx <- hh ! h
         return ((dC dd) !! idx)
 
+(<!?>) :: DatasetR -> [String] -> [Row]
 
+(>>) :: DatasetC -> [String] -> DatasetR
 
-someFunc :: IO()
-someFunc = putStr ("Here is something" ++ (foldl (\x y -> x++y) "" ["1","2","3"]))
+(++) :: DatasetR -> Column -> DatasetR
+
+join :: DatasetR -> [String] -> [Row] -> DatasetR
