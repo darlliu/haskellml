@@ -1,16 +1,24 @@
+-- some trivial exercises juggling two types of data classes
 module Data
-    (Column(..),
+    (Datum(..),
+    Column(..),
     DatasetC(..),
     Row, 
     DatasetR(..),
     (<?>),
     (<!!>),
-    (<!>)
+    (<!>),
+    toR,
+    toC,
+    (<+>),
+    (<++>),
+    (>->)
     ) where
 
 import qualified Data.List as DL
-
-data Column = ICol [Int] | FCol [Float] | SCol [String] 
+data Datum = IVal Int | FVal Double | SVal String | Null
+    deriving (Show,Eq)
+data Column = IVec [Int] | FVec [Double] | SVec [String] | NullCol
     deriving (Show,Eq)
 
 data DatasetC = DatasetC{
@@ -18,11 +26,18 @@ data DatasetC = DatasetC{
     dC :: [Column]
 } deriving (Show, Eq)
 
-type Row = [Float]
+type Row = [Datum]
+
 data DatasetR = DatasetR{
     headerR :: [String],
     dR :: [Row]
 } deriving (Show,Eq)
+
+addCol :: Column -> Column -> Column
+addCol (IVec iv1) (IVec iv2) = IVec (iv1++iv2)
+addCol (FVec iv1) (FVec iv2) = FVec (iv1++iv2)
+addCol (SVec iv1) (SVec iv2) = SVec (iv1++iv2)
+addCol _ _ =  NullCol
 
 (!) :: [String] -> String -> Maybe Int
 hh ! h = h `DL.elemIndex` hh
@@ -68,20 +83,50 @@ dr <!!> hs = do
         dR = rr
     }
 
--- cToR :: [Col] :: [Row]
--- cToR [] = []
--- cToR col:cols = 
+colToRow :: Column -> Row
+colToRow (IVec iv) = [IVal v | v <- iv]
+colToRow (FVec fv) = [FVal v | v <- fv]
+colToRow (SVec sv) = [SVal v | v <- sv]
+colToRow _ = [Null]
+
+getColLen :: [Column] -> Int
+getColLen (IVec iv:ivs) = length iv
+getColLen (FVec fv:fvs) = length fv
+getColLen (SVec sv:svs) = length sv
+getColLen _ = 0
+
+cToR :: [Column] -> [Row]
+cToR [] = []
+cToR cols = let idxs = take (getColLen cols) [0..] in 
+    fmap (\idx ->  [rs!!idx | rs<- (fmap colToRow cols)]) idxs
 
 
--- (toR):: DatasetC :: DatasetR
--- toR dc = DatasetR{
---     headerR = headerC dc,
---     dR = 
--- }
+toR :: DatasetC -> DatasetR
+toR dc = DatasetR{
+    headerR = headerC dc,
+    dR = cToR $ dC dc
+}
 
--- (toC):: DatasetC :: DatasetR
+rowToCol :: Row -> [Column]
+rowToCol [] = []
+rowToCol (IVal i:rs) = (IVec [i]): (rowToCol rs) 
+rowToCol (FVal i:rs) = (FVec [i]): (rowToCol rs) 
+rowToCol (SVal i:rs) = (SVec [i]): (rowToCol rs) 
 
---(>>) :: DatasetC -> [String] -> DatasetR --subSet and convert
+rToC :: [Row] -> [Column]
+rToC rows_ = let rows = fmap rowToCol rows_ in
+    foldl (\x y -> zipWith (addCol) x y) (head rows) (tail rows)
+
+toC:: DatasetR -> DatasetC
+toC dr = DatasetC {
+    headerC = headerR dr,
+    dC = rToC $ dR dr
+}
+
+(>->) :: DatasetC -> [String] -> Maybe DatasetR --subSet and convert
+dc >-> hs = do 
+    c2 <- dc <!> hs
+    return $ toR c2
 
 (<+>) :: DatasetC -> DatasetC -> DatasetC --Append
 dc1 <+> dc2 = DatasetC {
@@ -89,8 +134,11 @@ dc1 <+> dc2 = DatasetC {
     dC = (dC dc1) ++ (dC dc2)
 }
 
-(<++>) :: DatasetR -> DatasetR -> DatasetR --Append
-dr1 <++> dr2 = DatasetR {
-    headerR = (headerR dr1) ++ (headerR dr2),
-    dR = zipWith (++) (dR dr1) (dR dr2)
-}
+(<++>) :: DatasetR -> DatasetR -> Maybe DatasetR --Append
+dr1 <++> dr2 = if 
+    headerR dr1 /= headerR dr2 
+        then Nothing
+        else Just DatasetR {
+        headerR = headerR dr1,
+        dR = dR dr1 ++ dR dr2
+        }
