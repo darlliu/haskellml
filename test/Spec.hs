@@ -81,8 +81,25 @@ testDatasetRAdd =
     TestCase $ assertEqual "Combine datasetR"
       (Just dr1) (dr2 <++> dr4)
 
+testParseInt = 
+    TestCase $ assertEqual "parsing int datum"
+      (IVal 132) (read "132"::Datum)
+
+testParseFloat = 
+    TestCase $ assertEqual "parsing float datum"
+      (FVal 132.32) (read "132.32"::Datum)
+
+testParseString = 
+    TestCase $ assertEqual "parsing string datum"
+      (SVal "192.168.1.1") (read "192.168.1.1"::Datum)
+
+testParseString2 = 
+    TestCase $ assertEqual "parsing string datum"
+      (SVal "<1H OCEAN") (read "<1H OCEAN"::Datum)
+
 main :: IO Counts
 main = runTestTT $ TestList [testDatasetCGet1, testDatasetCGet2, testDatasetGetRows1,
     testDatasetGetRows2, testDatasetCToR, testDatasetRToC, testDatasetCToRSub, testDatasetCAdd,
-    testDatasetRAdd, testDatasetGetCols1, testDatasetGetCols2
+    testDatasetRAdd, testDatasetGetCols1, testDatasetGetCols2,
+    testParseInt, testParseFloat, testParseString, testParseString2
     ]

@@ -14,10 +14,21 @@ module Data
     (<++>),
     (>->)
     ) where
-
 import qualified Data.List as DL
+import Data.Char
+
 data Datum = IVal Int | FVal Double | SVal String | Null
     deriving (Show,Eq)
+
+instance Read Datum where
+    readsPrec _ input 
+        | foldl (&&) True $ fmap isDigit input = 
+            [(IVal (read input::Int),"")]
+        | (foldl (&&) True $ fmap (\x->isDigit x || x=='.') input) 
+            && ((length $ filter (\x -> x=='.') input) == 1) 
+            = [(FVal (read input::Double),"")]
+        | otherwise = [(SVal input, "")]
+
 data Column = IVec [Int] | FVec [Double] | SVec [String] | NullCol
     deriving (Show,Eq)
 
@@ -84,10 +95,11 @@ dr <!!> hs = do
     }
 
 colToRow :: Column -> Row
-colToRow (IVec iv) = [IVal v | v <- iv]
-colToRow (FVec fv) = [FVal v | v <- fv]
-colToRow (SVec sv) = [SVal v | v <- sv]
-colToRow _ = [Null]
+colToRow v = case v of 
+  IVec iv -> [IVal v | v <- iv]
+  FVec fv -> [FVal v | v <- fv]
+  SVec sv -> [SVal v | v <- sv]
+  _ -> [Null]
 
 getColLen :: [Column] -> Int
 getColLen (IVec iv:ivs) = length iv
@@ -97,8 +109,9 @@ getColLen _ = 0
 
 cToR :: [Column] -> [Row]
 cToR [] = []
-cToR cols = let idxs = take (getColLen cols) [0..] in 
-    fmap (\idx ->  [rs!!idx | rs<- (fmap colToRow cols)]) idxs
+cToR cols = fmap (\idx ->  [rs!!idx | rs<- cols_]) idxs where
+    idxs = take (getColLen cols) [0..]
+    cols_ = fmap colToRow cols
 
 
 toR :: DatasetC -> DatasetR
@@ -124,9 +137,10 @@ toC dr = DatasetC {
 }
 
 (>->) :: DatasetC -> [String] -> Maybe DatasetR --subSet and convert
-dc >-> hs = do 
-    c2 <- dc <!> hs
-    return $ toR c2
+dc >-> hs = toR dc <!!> hs
+
+(<-<) ::DatasetR -> [String] -> Maybe DatasetC
+dr <-< hs = toC dr <!> hs
 
 (<+>) :: DatasetC -> DatasetC -> DatasetC --Append
 dc1 <+> dc2 = DatasetC {

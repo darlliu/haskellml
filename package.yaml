@@ -23,6 +23,8 @@ dependencies:
 
 library:
   source-dirs: src
+  dependencies:
+  - split
 
 executables:
   ml-exe:
@@ -48,3 +50,4 @@ tests:
     dependencies:
     - ml
     - HUnit
+
