@@ -1,5 +1,5 @@
 name:                ml
-version:             0.1.0.0
+version:             0.1.1.0
 github:              "darlliu/haskellml"
 license:             GPL-3
 author:              "darlliu"
@@ -39,7 +39,7 @@ executables:
     - ml
 
 tests:
-  ml-test:
+  test-ml:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -50,4 +50,3 @@ tests:
     dependencies:
     - ml
     - HUnit
-

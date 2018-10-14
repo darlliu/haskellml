@@ -1,5 +1,17 @@
 import Test.HUnit
 import Data 
+import Preprocess
+
+v10 = IVec [1,2,3,4,5]
+v20 = FVec [1.0,2.0,3.0,4.0,5.0]
+v21 = FVec [1.0,2.0,0/0,4.0,0/0]
+
+testCountNA1 = 
+    TestCase $ assertEqual "Counting nan 1"
+      [] (getNA v10)
+testCountNA2 = 
+    TestCase $ assertEqual "Counting nan 2"
+      [2,4] (getNA v21)
 
 dc1 = DatasetC {
     headerC = ["Int","Float","Obj"],
@@ -101,5 +113,6 @@ main :: IO Counts
 main = runTestTT $ TestList [testDatasetCGet1, testDatasetCGet2, testDatasetGetRows1,
     testDatasetGetRows2, testDatasetCToR, testDatasetRToC, testDatasetCToRSub, testDatasetCAdd,
     testDatasetRAdd, testDatasetGetCols1, testDatasetGetCols2,
-    testParseInt, testParseFloat, testParseString, testParseString2
+    testParseInt, testParseFloat, testParseString, testParseString2,
+    testCountNA1,testCountNA2
     ]

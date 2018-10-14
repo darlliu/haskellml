@@ -22,9 +22,11 @@ data Datum = IVal Int | FVal Double | SVal String | Null
 
 instance Read Datum where
     readsPrec _ input 
+        | input == "NaN" = [(FVal (read "NaN"::Double),"")]
+        | input == "" = [(FVal (read "NaN"::Double),"")]
         | foldl (&&) True $ fmap isDigit input = 
             [(IVal (read input::Int),"")]
-        | (foldl (&&) True $ fmap (\x->isDigit x || x=='.') input) 
+        | ((head input == '-')||(isDigit $ head input)) && (foldl (&&) True $ fmap (\x->isDigit x || x=='.' ) $ tail input) 
             && ((length $ filter (\x -> x=='.') input) == 1) 
             = [(FVal (read input::Double),"")]
         | otherwise = [(SVal input, "")]
