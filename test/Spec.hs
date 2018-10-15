@@ -12,6 +12,18 @@ testCountNA1 =
 testCountNA2 = 
     TestCase $ assertEqual "Counting nan 2"
       [2,4] (getNA v21)
+testMean1 =
+    TestCase $ assertEqual "mean int"
+      (Just 3.0) (getMean v10) 
+testMean2 =
+    TestCase $ assertEqual "mean double with na"
+      (Just $ (1+2+4)/3) (getMean $ filterNA v21)
+testVar1 =
+    TestCase $ assertEqual "variance test 1"
+      (Nothing) (getVar $ FVec [])
+testVar2 = 
+    TestCase $ assertEqual "variance test 2"
+      (Just 2.0) (getVar v10)
 
 dc1 = DatasetC {
     headerC = ["Int","Float","Obj"],
@@ -114,5 +126,5 @@ main = runTestTT $ TestList [testDatasetCGet1, testDatasetCGet2, testDatasetGetR
     testDatasetGetRows2, testDatasetCToR, testDatasetRToC, testDatasetCToRSub, testDatasetCAdd,
     testDatasetRAdd, testDatasetGetCols1, testDatasetGetCols2,
     testParseInt, testParseFloat, testParseString, testParseString2,
-    testCountNA1,testCountNA2
+    testCountNA1,testCountNA2, testMean1, testMean2, testVar1, testVar2
     ]
