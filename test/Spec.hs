@@ -2,9 +2,11 @@ import Test.HUnit
 import Data 
 import Preprocess
 
-v10 = IVec [1,2,3,4,5]
+v10 = IVec [1,3,4,5,2]
+v11 = IVec [1,1,2,2]
 v20 = FVec [1.0,2.0,3.0,4.0,5.0]
 v21 = FVec [1.0,2.0,0/0,4.0,0/0]
+v22 = FVec [1.0,2.0,2.0,4.0,2.0]
 
 testCountNA1 = 
     TestCase $ assertEqual "Counting nan 1"
@@ -24,6 +26,23 @@ testVar1 =
 testVar2 = 
     TestCase $ assertEqual "variance test 2"
       (Just 2.0) (getVar v10)
+testMedian1 = 
+    TestCase $ assertEqual "median test 1"
+      (Just 3.0) (getMedian v10)
+testMedian2 = 
+    TestCase $ assertEqual "median test 2"
+      (Just 1.5) (getMedian v11)
+testMedian3 = 
+    TestCase $ assertEqual "median test 3: nan to median"
+      (v22) (nanToMedian v21)
+
+testMmNormalize =
+    TestCase $ assertEqual "test min max normalize"
+      (FVec [0.0, 0.5, 0.75, 1, 0.25]) (mmNormalize v10)
+
+testStdNormalize =
+    TestCase $ assertEqual "test std normalize, testing indirectly for now"
+      (stdNormalize $ FVec [-0.5, 0, 0.5]) (stdNormalize $ FVec [-1.0, 0.0, 1.0])
 
 dc1 = DatasetC {
     headerC = ["Int","Float","Obj"],
@@ -126,5 +145,7 @@ main = runTestTT $ TestList [testDatasetCGet1, testDatasetCGet2, testDatasetGetR
     testDatasetGetRows2, testDatasetCToR, testDatasetRToC, testDatasetCToRSub, testDatasetCAdd,
     testDatasetRAdd, testDatasetGetCols1, testDatasetGetCols2,
     testParseInt, testParseFloat, testParseString, testParseString2,
-    testCountNA1,testCountNA2, testMean1, testMean2, testVar1, testVar2
+    testCountNA1,testCountNA2, testMean1, testMean2, testVar1, testVar2,
+    testMedian1, testMedian2,testMedian3,
+    testMmNormalize, testStdNormalize
     ]
