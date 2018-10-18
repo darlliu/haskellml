@@ -7,7 +7,7 @@ v11 = IVec [1,1,2,2]
 v20 = FVec [1.0,2.0,3.0,4.0,5.0]
 v21 = FVec [1.0,2.0,0/0,4.0,0/0]
 v22 = FVec [1.0,2.0,2.0,4.0,2.0]
-
+v30 = IVec [0,1,2]
 testCountNA1 = 
     TestCase $ assertEqual "Counting nan 1"
       [] (getNA v10)
@@ -43,6 +43,19 @@ testMmNormalize =
 testStdNormalize =
     TestCase $ assertEqual "test std normalize, testing indirectly for now"
       (stdNormalize $ FVec [-0.5, 0, 0.5]) (stdNormalize $ FVec [-1.0, 0.0, 1.0])
+
+dr5 = DatasetR {
+    headerR = ["sig-0","sig-1","sig-2"],
+    dR = [
+        [IVal 1, IVal 0, IVal 0],
+        [IVal 0, IVal 1, IVal 0],
+        [IVal 0, IVal 0, IVal 1]
+    ]
+}
+
+testOnehotEncode = 
+    TestCase $ assertEqual "test Onehot Encode"
+      (Just dr5) (oneHotEncode v30 "sig")
 
 dc1 = DatasetC {
     headerC = ["Int","Float","Obj"],
@@ -147,5 +160,5 @@ main = runTestTT $ TestList [testDatasetCGet1, testDatasetCGet2, testDatasetGetR
     testParseInt, testParseFloat, testParseString, testParseString2,
     testCountNA1,testCountNA2, testMean1, testMean2, testVar1, testVar2,
     testMedian1, testMedian2,testMedian3,
-    testMmNormalize, testStdNormalize
+    testMmNormalize, testStdNormalize, testOnehotEncode
     ]

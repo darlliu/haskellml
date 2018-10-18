@@ -78,8 +78,17 @@ stdNormalize (FVec fv) =
 stdNormalize (IVec iv) = stdNormalize (FVec $ map (\x -> fromIntegral x::Double) iv)
 stdNormalize col = col
 
-oneHotEncode :: Column -> Maybe DatasetC
-oneHotEncode (IVec iv) = 
-oneHotEncode (FVec fv) = oneHotEncode $ IVec $ fmap (\x -> round x) fv  
-oneHotEncode col = Nothing
+encodeInt :: Int-> [Int] -> Row
+encodeInt i is = [ if i==ii then (IVal 1) else (IVal 0) | ii <- is]
+
+oneHotEncode :: Column -> String -> Maybe DatasetR
+oneHotEncode (IVec iv) hh = do
+    let ivv = DU.sortUniq iv
+    let kvv = fmap (\x -> hh++"-"++(show x)) ivv
+    return $ DatasetR{
+        headerR = kvv,
+        dR = fmap (\x-> encodeInt x ivv) iv
+    }
+oneHotEncode (FVec fv) hh = oneHotEncode (IVec $ fmap (\x -> round x) fv) hh  
+oneHotEncode _ _ = Nothing
 
