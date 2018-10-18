@@ -1,19 +1,5 @@
 -- some trivial exercises juggling two types of data classes
-module Data
-    (Datum(..),
-    Column(..),
-    DatasetC(..),
-    Row, 
-    DatasetR(..),
-    (<?>),
-    (<!!>),
-    (<!>),
-    toR,
-    toC,
-    (<+>),
-    (<++>),
-    (>->)
-    ) where
+module Data where
 import qualified Data.List as DL
 import Data.Char
 

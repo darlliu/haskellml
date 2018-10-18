@@ -1,6 +1,7 @@
 module Preprocess where
 import Data
 import Data.List as DL
+import Data.List.Unique as DU
 getNA :: Column -> [Int] -- get NA indexes
 getNA (IVec iv) = filter (\x-> x/= -1) $ zipWith (\x y -> if isNaN $ fromIntegral x then y else -1) iv (take  (length iv) [0..])
 getNA (FVec fv) = filter (\x-> x/= -1) $ zipWith (\x y -> if isNaN x then y else -1) fv (take  (length fv) [0..])
@@ -78,5 +79,7 @@ stdNormalize (IVec iv) = stdNormalize (FVec $ map (\x -> fromIntegral x::Double)
 stdNormalize col = col
 
 oneHotEncode :: Column -> Maybe DatasetC
+oneHotEncode (IVec iv) = 
+oneHotEncode (FVec fv) = oneHotEncode $ IVec $ fmap (\x -> round x) fv  
 oneHotEncode col = Nothing
 
