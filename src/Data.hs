@@ -144,3 +144,8 @@ dr1 <++> dr2 = if
         headerR = headerR dr1,
         dR = dR dr1 ++ dR dr2
         }
+(<+++>) :: DatasetR -> DatasetR -> DatasetR --Append
+dr1 <+++> dr2 =  DatasetR {
+        headerR = (headerR dr1) ++ (headerR dr2),
+        dR = zipWith (++) (dR dr1) (dR dr2)
+        }
