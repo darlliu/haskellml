@@ -78,7 +78,7 @@ stdNormalize (FVec fv) =
 stdNormalize (IVec iv) = stdNormalize (FVec $ map (\x -> fromIntegral x::Double) iv)
 stdNormalize col = col
 
-encodeInt :: Int-> [Int] -> Row
+encodeInt :: (Eq a) => a-> [a] -> Row
 encodeInt i is = [ if i==ii then (IVal 1) else (IVal 0) | ii <- is]
 
 oneHotEncode :: Column -> String -> Maybe DatasetR
@@ -90,5 +90,11 @@ oneHotEncode (IVec iv) hh = do
         dR = fmap (\x-> encodeInt x ivv) iv
     }
 oneHotEncode (FVec fv) hh = oneHotEncode (IVec $ fmap (\x -> round x) fv) hh  
+oneHotEncode (SVec sv) hh = do
+    let svv = DU.sortUniq sv
+    return $ DatasetR {
+        headerR = fmap (\x -> hh ++ "-" ++ x) svv,
+        dR = fmap (\x -> encodeInt x svv) sv
+    }  
 oneHotEncode _ _ = Nothing
 

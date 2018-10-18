@@ -53,9 +53,23 @@ dr5 = DatasetR {
     ]
 }
 
+s00 = SVec ["a", "b", "c"]
+dr6 = DatasetR {
+    headerR = ["sig-a","sig-b","sig-c"],
+    dR = [
+        [IVal 1, IVal 0, IVal 0],
+        [IVal 0, IVal 1, IVal 0],
+        [IVal 0, IVal 0, IVal 1]
+    ]
+}
+
 testOnehotEncode = 
     TestCase $ assertEqual "test Onehot Encode"
       (Just dr5) (oneHotEncode v30 "sig")
+
+testOnehotEncode2 = 
+    TestCase $ assertEqual "test Onehot Encode"
+      (Just dr6) (oneHotEncode s00 "sig")
 
 dc1 = DatasetC {
     headerC = ["Int","Float","Obj"],
@@ -160,5 +174,5 @@ main = runTestTT $ TestList [testDatasetCGet1, testDatasetCGet2, testDatasetGetR
     testParseInt, testParseFloat, testParseString, testParseString2,
     testCountNA1,testCountNA2, testMean1, testMean2, testVar1, testVar2,
     testMedian1, testMedian2,testMedian3,
-    testMmNormalize, testStdNormalize, testOnehotEncode
+    testMmNormalize, testStdNormalize, testOnehotEncode, testOnehotEncode2
     ]
