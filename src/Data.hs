@@ -1,6 +1,7 @@
 -- some trivial exercises juggling two types of data classes
 module Data where
-import qualified Data.List as DL
+import Prelude hiding (foldl, (++), zipWith, head, tail, take, length, foldr, filter,map)
+import qualified Prelude as P (foldl, (++), zipWith, head, tail, take, length, foldr, filter,map)
 import Data.Char
 import Data.Vector
 
@@ -11,26 +12,26 @@ instance Read Datum where
     readsPrec _ input 
         | input == "NaN" = [(FVal (read "NaN"::Double),"")]
         | input == "" = [(FVal (read "NaN"::Double),"")]
-        | foldl (&&) True $ fmap isDigit input = 
+        | P.foldl (&&) True $ fmap isDigit input = 
             [(IVal (read input::Int),"")]
-        | ((head input == '-')||(isDigit $ head input)) && (foldl (&&) True $ fmap (\x->isDigit x || x=='.' ) $ tail input) 
-            && ((length $ filter (\x -> x=='.') input) == 1) 
+        | ((P.head input == '-')||(isDigit $ P.head input)) && (P.foldl (&&) True $ fmap (\x->isDigit x || x=='.' ) $ P.tail input) 
+            && ((P.length $ P.filter (\x -> x=='.') input) == 1) 
             = [(FVal (read input::Double),"")]
         | otherwise = [(SVal input, "")]
 
-data Column = IVec [Int] | FVec [Double] | SVec [String] | NullCol
+data Column = IVec (Vector Int) | FVec (Vector Double) | SVec (Vector String) | NullCol
     deriving (Show,Eq)
 
 data DatasetC = DatasetC{
-    headerC :: [String],
-    dC :: [Column]
+    headerC :: Vector String,
+    dC :: Vector Column
 } deriving (Show, Eq)
 
-type Row = [Datum]
+type Row = Vector Datum
 
 data DatasetR = DatasetR{
-    headerR :: [String],
-    dR :: [Row]
+    headerR :: Vector String,
+    dR :: Vector Row
 } deriving (Show,Eq)
 
 addCol :: Column -> Column -> Column
@@ -39,23 +40,20 @@ addCol (FVec iv1) (FVec iv2) = FVec (iv1++iv2)
 addCol (SVec iv1) (SVec iv2) = SVec (iv1++iv2)
 addCol _ _ =  NullCol
 
-(!) :: [String] -> String -> Maybe Int
-hh ! h = h `DL.elemIndex` hh
-
 (<?>) :: DatasetC -> String -> Maybe Column  --getCol
 dd <?> h = 
         let hh = headerC dd 
         in do 
-        idx <- hh ! h
-        return ((dC dd) !! idx)
+        idx <- elemIndex h hh
+        return ((dC dd) ! idx)
 
-getIdxs :: [String] -> [String] -> Maybe [Int]
-getIdxs hh hs  = let idxs_ = [hh ! x |x<-hs] 
+getIdxs :: Vector String -> Vector String -> Maybe (Vector Int)
+getIdxs hh hs  = let idxs_ = map (\h -> elemIndex h hh) hs 
     in foldr (\x y -> do
         x_ <- x
         y_ <- y
-        Just(x_ : y_)) 
-        (Just []) idxs_
+        Just(x_ `cons` y_)) 
+        (Just empty) idxs_
     --   case x of 
     --     Nothing -> Nothing
     --     Just x_ -> case y of 
@@ -63,21 +61,23 @@ getIdxs hh hs  = let idxs_ = [hh ! x |x<-hs]
     --         Just y_ -> Just(x_++[y_])) (Just []) idxs_
 
 (<!>) :: DatasetC -> [String] -> Maybe DatasetC --subSet Columns
-dc <!> hs = do
+dc <!> hs_ = do
+    let hs = fromList hs_
     idxs <- getIdxs (headerC dc) hs
     let cs = dC dc
-    let cc = fmap (\x -> cs!!x) idxs
+    let cc = map (\x -> cs ! x) idxs
     return DatasetC {
         headerC = hs,
         dC = cc
     }
 
 (<!!>) :: DatasetR -> [String] -> Maybe DatasetR --subSet Rows
-dr <!!> hs = do
+dr <!!> hs_ = do
+    let hs = fromList hs_
     idxs <- getIdxs (headerR dr) hs
     let rs = dR dr
     let rr = fmap (\r -> 
-             fmap (\x ->r!!x) idxs) rs
+             fmap (\x ->r ! x) idxs) rs
     return DatasetR {
         headerR = hs,
         dR = rr
@@ -85,22 +85,26 @@ dr <!!> hs = do
 
 colToRow :: Column -> Row
 colToRow v = case v of 
-  IVec iv -> [IVal v | v <- iv]
-  FVec fv -> [FVal v | v <- fv]
-  SVec sv -> [SVal v | v <- sv]
-  _ -> [Null]
+  IVec iv -> map (\v -> IVal v) iv
+  FVec fv -> map (\v -> FVal v) fv
+  SVec sv -> map (\v -> SVal v) sv
+  _ -> singleton Null
 
-getColLen :: [Column] -> Int
-getColLen (IVec iv:ivs) = length iv
-getColLen (FVec fv:fvs) = length fv
-getColLen (SVec sv:svs) = length sv
-getColLen _ = 0
+getColLen :: Vector Column -> Int
+getColLen cols
+  | length cols == 0 = 0
+  | otherwise = let col = cols ! 0
+    in case col of
+      (IVec iv) -> length iv
+      (FVec fv) -> length fv
+      (SVec sv) -> length sv
+      NullCol -> 0  
 
-cToR :: [Column] -> [Row]
-cToR [] = []
-cToR cols = fmap (\idx ->  [rs!!idx | rs<- cols_]) idxs where
-    idxs = take (getColLen cols) [0..]
-    cols_ = fmap colToRow cols
+cToR :: Vector Column -> Vector Row
+cToR cols = if length cols == 0 then empty else
+    map (\idx ->  map (\rs -> rs ! idx ) cols_ ) idxs where
+      idxs = enumFromN 0 (getColLen cols)
+      cols_ = map colToRow cols
 
 
 toR :: DatasetC -> DatasetR
@@ -109,14 +113,18 @@ toR dc = DatasetR{
     dR = cToR $ dC dc
 }
 
-rowToCol :: Row -> [Column]
-rowToCol [] = []
-rowToCol (IVal i:rs) = (IVec [i]): (rowToCol rs) 
-rowToCol (FVal i:rs) = (FVec [i]): (rowToCol rs) 
-rowToCol (SVal i:rs) = (SVec [i]): (rowToCol rs) 
+rowToCol :: Row -> Vector Column
+rowToCol row
+  | length row == 0 = empty
+  | otherwise = let i_ = head row in
+    case i_ of
+        IVal i -> (IVec $ singleton i) `cons` rowToCol (tail row)
+        FVal i -> (FVec $ singleton i) `cons` rowToCol (tail row)
+        SVal i -> (SVec $ singleton i) `cons` rowToCol (tail row)
+        Null -> (NullCol) `cons` rowToCol (tail row) 
 
-rToC :: [Row] -> [Column]
-rToC rows_ = let rows = fmap rowToCol rows_ in
+rToC :: Vector Row -> Vector Column
+rToC rows_ = let rows = map rowToCol rows_ in
     foldl (\x y -> zipWith (addCol) x y) (head rows) (tail rows)
 
 toC:: DatasetR -> DatasetC

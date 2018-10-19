@@ -25,7 +25,6 @@ library:
   source-dirs: src
   dependencies:
   - split
-  - Unique >= 0.4
   - vector
 
 executables:
@@ -39,6 +38,7 @@ executables:
     - -fdiagnostics-color=never
     dependencies:
     - ml
+    - vector
 
 tests:
   test-ml:
@@ -52,3 +52,4 @@ tests:
     dependencies:
     - ml
     - HUnit
+    - vector

@@ -1,19 +1,20 @@
 import Test.HUnit
 import Data 
 import Preprocess
+import Data.Vector (fromList, singleton, empty)
 
-v10 = IVec [1,3,4,5,2]
-v11 = IVec [1,1,2,2]
-v20 = FVec [1.0,2.0,3.0,4.0,5.0]
-v21 = FVec [1.0,2.0,0/0,4.0,0/0]
-v22 = FVec [1.0,2.0,2.0,4.0,2.0]
-v30 = IVec [0,1,2]
+v10 = IVec $ fromList [1,3,4,5,2]
+v11 = IVec $ fromList [1,1,2,2]
+v20 = FVec $ fromList [1.0,2.0,3.0,4.0,5.0]
+v21 = FVec $ fromList [1.0,2.0,0/0,4.0,0/0]
+v22 = FVec $ fromList [1.0,2.0,2.0,4.0,2.0]
+v30 = IVec $ fromList [0,1,2]
 testCountNA1 = 
     TestCase $ assertEqual "Counting nan 1"
-      [] (getNA v10)
+      (fromList []) (getNA v10)
 testCountNA2 = 
     TestCase $ assertEqual "Counting nan 2"
-      [2,4] (getNA v21)
+      (fromList [2,4]) (getNA v21)
 testMean1 =
     TestCase $ assertEqual "mean int"
       (Just 3.0) (getMean v10) 
@@ -22,7 +23,7 @@ testMean2 =
       (Just $ (1+2+4)/3) (getMean $ filterNA v21)
 testVar1 =
     TestCase $ assertEqual "variance test 1"
-      (Nothing) (getVar $ FVec [])
+      (Nothing) (getVar $ FVec $ fromList [])
 testVar2 = 
     TestCase $ assertEqual "variance test 2"
       (Just 2.0) (getVar v10)
@@ -38,25 +39,25 @@ testMedian3 =
 
 testMmNormalize =
     TestCase $ assertEqual "test min max normalize"
-      (FVec [0.0, 0.5, 0.75, 1, 0.25]) (mmNormalize v10)
+      (FVec $ fromList [0.0, 0.5, 0.75, 1, 0.25]) (mmNormalize v10)
 
 testStdNormalize =
     TestCase $ assertEqual "test std normalize, testing indirectly for now"
-      (stdNormalize $ FVec [-0.5, 0, 0.5]) (stdNormalize $ FVec [-1.0, 0.0, 1.0])
+      (stdNormalize $ FVec $ fromList [-0.5, 0, 0.5]) (stdNormalize $ FVec $ fromList [-1.0, 0.0, 1.0])
 
 dr5 = DatasetR {
-    headerR = ["sig-0","sig-1","sig-2"],
-    dR = [
+    headerR = fromList ["sig-0","sig-1","sig-2"],
+    dR = fromList $ fmap fromList [
         [IVal 1, IVal 0, IVal 0],
         [IVal 0, IVal 1, IVal 0],
         [IVal 0, IVal 0, IVal 1]
     ]
 }
 
-s00 = SVec ["a", "b", "c"]
+s00 = SVec $ fromList ["a", "b", "c"]
 dr6 = DatasetR {
-    headerR = ["sig-a","sig-b","sig-c"],
-    dR = [
+    headerR = fromList ["sig-a","sig-b","sig-c"],
+    dR = fromList $ fmap fromList [
         [IVal 1, IVal 0, IVal 0],
         [IVal 0, IVal 1, IVal 0],
         [IVal 0, IVal 0, IVal 1]
@@ -72,41 +73,41 @@ testOnehotEncode2 =
       (Just dr6) (oneHotEncode s00 "sig")
 
 dc1 = DatasetC {
-    headerC = ["Int","Float","Obj"],
-    dC = [IVec [1,2], FVec [0.1,0.2], SVec ["One","Two"]]
+    headerC = fromList ["Int","Float","Obj"],
+    dC = fromList [IVec $ fromList [1,2], FVec $ fromList [0.1,0.2], SVec $ fromList ["One","Two"]]
 }
 dc2 = DatasetC {
-    headerC = ["One","Two","Three"],
-    dC = [FVec [1.0, 1.1], FVec[ 2.0, 2.1], IVec [0, 1]]
+    headerC = fromList ["One","Two","Three"],
+    dC = fromList [FVec $ fromList [1.0, 1.1], FVec $ fromList [ 2.0, 2.1], IVec $ fromList [0, 1]]
 }
 dc3 = DatasetC {
-    headerC = ["One","Two"],
-    dC = [FVec [1.0, 1.1], FVec[ 2.0, 2.1]]
+    headerC = fromList ["One","Two"],
+    dC = fromList [FVec $ fromList [1.0, 1.1], FVec $ fromList[ 2.0, 2.1]]
 }
 dc4 = DatasetC {
-    headerC = ["Three"],
-    dC = [IVec [0,1]]
+    headerC = fromList ["Three"],
+    dC = fromList [IVec $ fromList [0,1]]
 }
 dr1 = DatasetR {
-    headerR = ["One","Two","Three"],
-    dR = [[FVal 1.0, FVal 2.0,IVal 0], [FVal 1.1, FVal 2.1, IVal 1]]
+    headerR = fromList ["One","Two","Three"],
+    dR = fromList [fromList [FVal 1.0, FVal 2.0,IVal 0], fromList [FVal 1.1, FVal 2.1, IVal 1]]
 }
 dr2 = DatasetR {
-    headerR = ["One","Two","Three"],
-    dR = [[FVal 1.0, FVal 2.0,IVal 0]]
+    headerR = fromList ["One","Two","Three"],
+    dR = fromList [fromList[FVal 1.0, FVal 2.0,IVal 0]]
 }
 dr3 = DatasetR {
-    headerR = ["One","Two"],
-    dR = [[FVal 1.0, FVal 2.0], [FVal 1.1, FVal 2.1]]
+    headerR =fromList ["One","Two"],
+    dR = fromList [fromList [FVal 1.0, FVal 2.0], fromList [FVal 1.1, FVal 2.1]]
 }
 dr4 = DatasetR {
-    headerR = ["One","Two","Three"],
-    dR = [[FVal 1.1, FVal 2.1, IVal 1]]
+    headerR = fromList ["One","Two","Three"],
+    dR = fromList [fromList [FVal 1.1, FVal 2.1, IVal 1]]
 }
 
 testDatasetCGet1 = 
     TestCase $ assertEqual "Getting a non-empty column"
-      (Just (SVec ["One", "Two"])) (dc1 <?> "Obj") 
+      (Just (SVec $ fromList ["One", "Two"])) (dc1 <?> "Obj") 
 
 testDatasetCGet2 = 
     TestCase $ assertEqual "Getting an invalid column"
@@ -118,18 +119,18 @@ testDatasetGetCols1 =
 
 testDatasetGetCols2 = 
     TestCase $ assertEqual "Invalid col indices"
-      Nothing (dc2 <!> ["Asd","Two"]) 
+      Nothing (dc2 <!> ["Asd","Two"])
 
 testDatasetGetRows1 = 
     TestCase $ assertEqual "Valid row indices"
       (Just DatasetR{
-          headerR = ["One", "Two"],
-          dR = [[FVal 1.0, FVal 2.0],[ FVal 1.1, FVal 2.1]]
+          headerR = fromList ["One", "Two"],
+          dR = fromList [fromList [FVal 1.0, FVal 2.0],fromList[ FVal 1.1, FVal 2.1]]
           }) (dr1 <!!> ["One","Two"]) 
 
 testDatasetGetRows2 = 
     TestCase $ assertEqual "Invalid row indices"
-      Nothing (dr1 <!!> ["Asd"]) 
+      Nothing (dr1 <!!>  ["Asd"]) 
 
 testDatasetCToR = 
     TestCase $ assertEqual "Convert datasetC to datasetR"

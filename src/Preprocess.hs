@@ -1,11 +1,13 @@
 module Preprocess where
 import Data
-import Data.List as DL
-import Data.List.Unique as DU
-getNA :: Column -> [Int] -- get NA indexes
-getNA (IVec iv) = filter (\x-> x/= -1) $ zipWith (\x y -> if isNaN $ fromIntegral x then y else -1) iv (take  (length iv) [0..])
-getNA (FVec fv) = filter (\x-> x/= -1) $ zipWith (\x y -> if isNaN x then y else -1) fv (take  (length fv) [0..])
-getNA col = []
+import qualified Data.List as DL
+import Prelude hiding (foldl, (++), zipWith, head, tail, take, length, foldr, filter,map, minimum, maximum)
+import qualified Prelude as P (foldl, (++), zipWith, head, tail, take, length, foldr, filter,map, minimum, maximum)
+import Data.Vector
+getNA :: Column -> Vector Int -- get NA indexes
+getNA (IVec iv) = filter (\x-> x/= -1) $ zipWith (\x y -> if isNaN $ fromIntegral x then y else -1) iv (enumFromN 0 (length iv))
+getNA (FVec fv) = filter (\x-> x/= -1) $ zipWith (\x y -> if isNaN x then y else -1) fv (enumFromN 0 (length fv))
+getNA _ = empty
 
 filterNA :: Column -> Column
 filterNA (IVec iv) = IVec $ filter (\x-> not $ isNaN $ fromIntegral x) iv
@@ -35,8 +37,8 @@ getVar col = Nothing
 
 getMedian :: Column -> Maybe Double
 getMedian (FVec fv) = do
-    let fvv = sort fv
-    let len = length fvv
+    let fvv = DL.sort $ toList fv
+    let len = length fv
     if len > 1 && mod len 2 == 0 then
         return $ (fvv !! (quot len 2) + fvv !! (quot len 2 - 1))/2
     else
@@ -79,22 +81,22 @@ stdNormalize (IVec iv) = stdNormalize (FVec $ map (\x -> fromIntegral x::Double)
 stdNormalize col = col
 
 encodeInt :: (Eq a) => a-> [a] -> Row
-encodeInt i is = [ if i==ii then (IVal 1) else (IVal 0) | ii <- is]
+encodeInt i is = fromList [ if i==ii then (IVal 1) else (IVal 0) | ii <- is]
 
 oneHotEncode :: Column -> String -> Maybe DatasetR
 oneHotEncode (IVec iv) hh = do
-    let ivv = DU.sortUniq iv
-    let kvv = fmap (\x -> hh++"-"++(show x)) ivv
+    let ivv = DL.sort $ toList $ uniq iv
+    let kvv = fmap (\x -> hh P.++ "-" P.++ (show x)) ivv
     return $ DatasetR{
-        headerR = kvv,
-        dR = fmap (\x-> encodeInt x ivv) iv
+        headerR = fromList kvv,
+        dR = map (\x-> encodeInt x ivv) iv
     }
 oneHotEncode (FVec fv) hh = oneHotEncode (IVec $ fmap (\x -> round x) fv) hh  
 oneHotEncode (SVec sv) hh = do
-    let svv = DU.sortUniq sv
+    let svv = DL.sort $ toList $ uniq sv
     return $ DatasetR {
-        headerR = fmap (\x -> hh ++ "-" ++ x) svv,
-        dR = fmap (\x -> encodeInt x svv) sv
+        headerR = fromList [ hh P.++ "-" P.++ x | x<- svv],
+        dR = map (\x -> encodeInt x svv) sv
     }  
 oneHotEncode _ _ = Nothing
 
