@@ -2,6 +2,7 @@
 module Data where
 import qualified Data.List as DL
 import Data.Char
+import Data.Vector
 
 data Datum = IVal Int | FVal Double | SVal String | Null
     deriving (Show,Eq)

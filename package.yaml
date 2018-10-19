@@ -26,6 +26,7 @@ library:
   dependencies:
   - split
   - Unique >= 0.4
+  - vector
 
 executables:
   ml-exe:
