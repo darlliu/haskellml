@@ -28,7 +28,7 @@ library:
   - vector
 
 executables:
-  ml-exe:
+  loadcsv:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
