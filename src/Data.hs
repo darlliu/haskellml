@@ -1,7 +1,7 @@
 -- some trivial exercises juggling two types of data classes
 module Data where
-import Prelude hiding (foldl, (++), zipWith, head, tail, take, length, foldr, filter,map)
-import qualified Prelude as P (foldl, (++), zipWith, head, tail, take, length, foldr, filter,map)
+import Prelude hiding (foldl, (++), zipWith, head, tail, take, length, foldr, filter, notElem, map)
+import qualified Prelude as P (foldl, (++), zipWith, head, tail, take, length, foldr, filter, notElem, map)
 import Data.Char
 import Data.Vector
 
@@ -158,3 +158,19 @@ dr1 <+++> dr2 =  DatasetR {
         headerR = (headerR dr1) ++ (headerR dr2),
         dR = zipWith (++) (dR dr1) (dR dr2)
         }
+
+dropRows :: DatasetR -> [Int] -> DatasetR
+dropRows dr idxs = let idxs_ = fromList idxs in
+    DatasetR {
+        headerR = headerR dr,
+        dR = ifilter (\idx x -> notElem idx idxs_) $ dR dr
+    }
+
+dropCol :: DatasetC -> String -> DatasetC
+dropCol dc h = let idx_ = elemIndex h $ headerC dc in
+    case idx_ of
+          Nothing -> dc
+          Just idx -> DatasetC {
+            headerC = filter(\x-> x /= h) $ headerC dc,
+            dC = ifilter (\idy x -> idy /= idx) $ dC dc
+}

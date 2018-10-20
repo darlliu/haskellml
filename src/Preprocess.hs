@@ -1,9 +1,11 @@
 module Preprocess where
 import Data
 import qualified Data.List as DL
-import Prelude hiding (foldl, (++), zipWith, head, tail, take, length, foldr, filter,map, minimum, maximum)
-import qualified Prelude as P (foldl, (++), zipWith, head, tail, take, length, foldr, filter,map, minimum, maximum)
+import Prelude hiding (foldl, (++), zipWith, head, tail, take, length, foldr, filter,map, minimum, maximum, splitAt)
+import qualified Prelude as P (foldl, (++), zipWith, head, tail, take, length, foldr, filter,map, minimum, maximum, splitAt)
 import Data.Vector
+import System.Random
+import System.Random.Shuffle
 getNA :: Column -> Vector Int -- get NA indexes
 getNA (IVec iv) = filter (\x-> x/= -1) $ zipWith (\x y -> if isNaN $ fromIntegral x then y else -1) iv (enumFromN 0 (length iv))
 getNA (FVec fv) = filter (\x-> x/= -1) $ zipWith (\x y -> if isNaN x then y else -1) fv (enumFromN 0 (length fv))
@@ -85,7 +87,7 @@ encodeInt i is = fromList [ if i==ii then (IVal 1) else (IVal 0) | ii <- is]
 
 oneHotEncode :: Column -> String -> Maybe DatasetR
 oneHotEncode (IVec iv) hh = do
-    let ivv = DL.sort $ toList $ uniq iv
+    let ivv = toList $ uniq $ fromList $ DL.sort $ toList iv
     let kvv = fmap (\x -> hh P.++ "-" P.++ (show x)) ivv
     return $ DatasetR{
         headerR = fromList kvv,
@@ -93,10 +95,48 @@ oneHotEncode (IVec iv) hh = do
     }
 oneHotEncode (FVec fv) hh = oneHotEncode (IVec $ fmap (\x -> round x) fv) hh  
 oneHotEncode (SVec sv) hh = do
-    let svv = DL.sort $ toList $ uniq sv
+    let svv = toList $ uniq $ fromList $ DL.sort $ toList sv
     return $ DatasetR {
         headerR = fromList [ hh P.++ "-" P.++ x | x<- svv],
         dR = map (\x -> encodeInt x svv) sv
     }  
 oneHotEncode _ _ = Nothing
 
+shuffleIndex :: [Int] -> IO [Int]
+shuffleIndex idxs = do
+    gen <- newStdGen
+    let len = P.length idxs
+    return (shuffle' idxs len gen) 
+
+trainTestSplit :: DatasetR -> Double -> IO (DatasetR, DatasetR)
+trainTestSplit dr v
+  | v<0 || v >= 1 =do
+    return (dr, DatasetR {headerR = fromList [], dR = fromList []})
+  | otherwise = do
+    let dd = dR dr
+    let idxs = enumFromN 0 $ length dd
+    let len = length idxs
+    newIdxs <- shuffleIndex $ toList idxs
+    let cutoff = round (v * (fromIntegral len))
+    let xsys = splitAt cutoff idxs
+    return (
+        dropRows dr $ toList $ snd xsys,
+        dropRows dr $ toList $ fst xsys)
+
+processHousing :: DatasetR -> Double -> IO (DatasetR,DatasetR)
+processHousing dr ratio = do
+  let dc_ = toC dr
+  let op = dc_ <?> "ocean_proximity" in
+    case op of
+      Nothing -> return (dr,DatasetR{headerR = empty, dR = empty})
+      Just col -> do
+        let dc = dropCol dc_ "ocean_proximity"
+        let dcc = DatasetC{
+            headerC = headerC dc,
+            dC = map (\x -> stdNormalize $ nanToMedian x) $ dC dc
+        }
+        let drr = toR dc
+        let drr2 = oneHotEncode col "OProx" in
+            case drr2 of 
+                Nothing -> return (drr,DatasetR{headerR = empty, dR = empty})
+                Just drr2_ -> trainTestSplit (drr <+++> drr2_) ratio

@@ -104,6 +104,10 @@ dr4 = DatasetR {
     headerR = fromList ["One","Two","Three"],
     dR = fromList [fromList [FVal 1.1, FVal 2.1, IVal 1]]
 }
+dr24 = DatasetR {
+    headerR = fromList ["One","Two","Three","One","Two","Three"],
+    dR = fromList [fromList[FVal 1.0, FVal 2.0,IVal 0,FVal 1.1, FVal 2.1, IVal 1]]
+}
 
 testDatasetCGet1 = 
     TestCase $ assertEqual "Getting a non-empty column"
@@ -168,12 +172,25 @@ testParseString2 =
     TestCase $ assertEqual "parsing string datum"
       (SVal "<1H OCEAN") (read "<1H OCEAN"::Datum)
 
+testDropRows =
+    TestCase $ assertEqual "testing drop rows"
+      (dr2) (dropRows dr1 [1])
+
+testDropCol =
+    TestCase $ assertEqual "testing drop col"
+      (dc3) (dropCol dc2 "Three")
+testCombineDR =
+    TestCase $ assertEqual "testing combine datasetrs"
+      (dr24) (dr2 <+++> dr4)
+
+
 main :: IO Counts
 main = runTestTT $ TestList [testDatasetCGet1, testDatasetCGet2, testDatasetGetRows1,
     testDatasetGetRows2, testDatasetCToR, testDatasetRToC, testDatasetCToRSub, testDatasetCAdd,
-    testDatasetRAdd, testDatasetGetCols1, testDatasetGetCols2,
+    testDatasetRAdd, testDatasetGetCols1, testDatasetGetCols2, testCombineDR,
     testParseInt, testParseFloat, testParseString, testParseString2,
     testCountNA1,testCountNA2, testMean1, testMean2, testVar1, testVar2,
     testMedian1, testMedian2,testMedian3,
-    testMmNormalize, testStdNormalize, testOnehotEncode, testOnehotEncode2
+    testMmNormalize, testStdNormalize, testOnehotEncode, testOnehotEncode2,
+    testDropRows, testDropCol
     ]
