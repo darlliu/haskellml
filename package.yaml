@@ -33,7 +33,7 @@ library:
 
 executables:
   loadcsv:
-    main:                Main.hs
+    main:                LoadCSV.hs
     source-dirs:         app
     ghc-options:
     - -threaded

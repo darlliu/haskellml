@@ -117,11 +117,15 @@ trainTestSplit dr v
     let idxs = enumFromN 0 $ length dd
     let len = length idxs
     newIdxs <- shuffleIndex $ toList idxs
+    let dr_ = DatasetR {
+        headerR = headerR dr,
+        dR = backpermute (dR dr) $ fromList newIdxs
+    }
     let cutoff = round (v * (fromIntegral len))
     let xsys = splitAt cutoff idxs
     return (
-        dropRows dr $ toList $ snd xsys,
-        dropRows dr $ toList $ fst xsys)
+        dropRows dr_ $ toList $ fst xsys,
+        dropRows dr_ $ toList $ snd xsys)
 
 processHousing :: DatasetR -> Double -> IO (DatasetR,DatasetR)
 processHousing dr ratio = do
