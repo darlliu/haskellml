@@ -183,6 +183,13 @@ testCombineDR =
     TestCase $ assertEqual "testing combine datasetrs"
       (dr24) (dr2 <+++> dr4)
 
+testAcu =
+    TestCase $ assertEqual "testing accuracy"
+      (0.6) (getAcu (fromList [1,1,1,0,0]) (fromList [1,1,1,1,1]))
+
+testl2norm =
+    TestCase $ assertEqual "testing l2norm"
+      (1.25) (getLoss (fromList [1.0,0.5]) (fromList [0, 0]))
 
 main :: IO Counts
 main = runTestTT $ TestList [testDatasetCGet1, testDatasetCGet2, testDatasetGetRows1,
@@ -192,5 +199,5 @@ main = runTestTT $ TestList [testDatasetCGet1, testDatasetCGet2, testDatasetGetR
     testCountNA1,testCountNA2, testMean1, testMean2, testVar1, testVar2,
     testMedian1, testMedian2,testMedian3,
     testMmNormalize, testStdNormalize, testOnehotEncode, testOnehotEncode2,
-    testDropRows, testDropCol
+    testDropRows, testDropCol, testAcu, testl2norm
     ]

@@ -40,6 +40,20 @@ executables:
     - -rtsopts
     - -O2
     - -with-rtsopts=-N
+    - -main-is LoadCSV
+    dependencies:
+    - ml
+    - vector
+
+  naivebayes:
+    main:                TestNB.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -O2
+    - -with-rtsopts=-N
+    - -main-is TestNB
     dependencies:
     - ml
     - vector

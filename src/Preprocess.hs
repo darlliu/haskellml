@@ -1,8 +1,8 @@
 module Preprocess where
 import Data
 import qualified Data.List as DL
-import Prelude hiding (foldl, (++), zipWith, head, tail, take, length, foldr, filter,map, minimum, maximum, splitAt)
-import qualified Prelude as P (foldl, (++), zipWith, head, tail, take, length, foldr, filter,map, minimum, maximum, splitAt)
+import Prelude hiding (foldl, (++), zipWith, head, tail, take, length, foldr, filter,map, minimum, maximum, splitAt, sum)
+import qualified Prelude as P (foldl, (++), zipWith, head, tail, take, length, foldr, filter,map, minimum, maximum, splitAt, sum)
 import Data.Vector
 import System.Random
 import System.Random.Shuffle
@@ -127,6 +127,14 @@ trainTestSplit dr v
         dropRows dr_ $ toList $ fst xsys,
         dropRows dr_ $ toList $ snd xsys)
 
+getAcu :: Vector Int -> Vector Int -> Double
+getAcu pred lbl = let match = zipWith (\x y -> if x == y then 1.0 else 0.0) pred lbl in
+    sum(match) / (fromIntegral $ length match)
+
+getLoss :: Vector Double -> Vector Double -> Double
+getLoss pred lbl = let diff = zipWith (\x y -> x-y) lbl pred in
+    (foldl (\x y -> x+ y*y) 0.0 diff) -- /(fromIntegral $ length diff)
+
 processHousing :: DatasetR -> Double -> IO (DatasetR,DatasetR)
 processHousing dr ratio = do
   let dc_ = toC dr
@@ -139,8 +147,18 @@ processHousing dr ratio = do
             headerC = headerC dc,
             dC = map (\x -> stdNormalize $ nanToMedian x) $ dC dc
         }
-        let drr = toR dc
+        let drr = toR dcc
         let drr2 = oneHotEncode col "OProx" in
             case drr2 of 
                 Nothing -> return (drr,DatasetR{headerR = empty, dR = empty})
                 Just drr2_ -> trainTestSplit (drr <+++> drr2_) ratio
+
+processHousing2 :: DatasetR -> Double -> IO (DatasetR,DatasetR)
+processHousing2 dr ratio = do
+    let dc = dropCol (toC dr) "ocean_proximity"
+    let dcc = DatasetC{
+        headerC = headerC dc,
+        dC = map (\x -> stdNormalize $ nanToMedian x) $ dC dc
+    }
+    let drr = toR dcc
+    trainTestSplit drr ratio

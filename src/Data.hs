@@ -163,11 +163,9 @@ dropRows :: DatasetR -> [Int] -> DatasetR
 dropRows dr idxs = let idxs_ = fromList idxs in
     DatasetR {
         headerR = headerR dr,
-        dR = foldl (\vs_ idx->
-            let vs = splitAt idx vs_ in
-                (fst vs) ++ (tail $ snd vs)) (dR dr) idxs_
+        dR = ifilter (\idx x -> notElem idx idxs_) $ dR dr
     }
-
+    
 dropCol :: DatasetC -> String -> DatasetC
 dropCol dc h = let idx_ = elemIndex h $ headerC dc in
     case idx_ of
