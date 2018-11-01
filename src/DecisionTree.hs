@@ -1,7 +1,7 @@
 module DecisionTree where
 import Data
 
-data DTree = DTree { 
+data DTree = Empty | DTree { 
     left :: DTree,
     right :: DTree,
     prediction :: Int,
@@ -21,10 +21,10 @@ cost dr fidx thrs = 0.0
 terminate :: DTree -> Int -> DatasetC -> Bool
 terminate node depth dr = False
 
-trainDT :: DTree -> DatasetR -> Int -> DTree
-trainDT node dr depth =
-    let dc = toC dr in
-    if terminate node depth dc then
-        node
-    else
-        let (dls, drs) = splitData dr (test node) (feature node) in
+trainDT :: DatasetR -> Int -> DTree
+trainDT dr depth = Empty
+    -- let dc = toC dr in
+    -- if terminate node depth dc then
+    --     node
+    -- else
+    --     let (dls, drs) = splitData dr (test node) (feature node) in
